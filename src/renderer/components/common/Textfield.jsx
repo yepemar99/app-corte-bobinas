@@ -46,7 +46,7 @@ const TextField = ({
             let nextValue;
             if (type === 'number') {
               const value = e.target.value;
-              nextValue = value === '' ? 0 : Number(value);
+              nextValue = value === '' ? '' : Number(value);
               field.onChange(nextValue);
             } else {
               nextValue = e.target.value;

@@ -136,6 +136,7 @@ const TableShell = ({ title, icon, rows, columns, emptyMessage }) => {
             <TableRow>
               {columns.map((column) => (
                 <TableCell
+                  align={column.align || 'left'}
                   key={column.key}
                   sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}
                 >
@@ -164,6 +165,7 @@ const TableShell = ({ title, icon, rows, columns, emptyMessage }) => {
                 >
                   {columns.map((column) => (
                     <TableCell
+                      align={column.align || 'left'}
                       key={`${column.key}-${index}`}
                       sx={{ whiteSpace: 'nowrap' }}
                     >
@@ -236,6 +238,8 @@ const Form = () => {
     }
   };
 
+  console.log('flejes:', flejesPlan);
+
   const loadPlanData = async (planId) => {
     if (!planId) {
       setPlanSeleccionado(null);
@@ -282,8 +286,11 @@ const Form = () => {
       const planCalidadId =
         flejes.find((row) => row?.calidad_id != null)?.calidad_id || null;
 
+      console.log('planCalidadId determinado:', plan);
+
       const bobinas = await loadApiRows([['bobinas', 'getAllForSelects']], {
-        calidad_id: planCalidadId,
+        calidadId: planCalidadId,
+        ancho: plan?.ancho_estipulado || null,
       });
 
       setBobinas(bobinas);
@@ -302,8 +309,8 @@ const Form = () => {
     }
   };
 
-  const loadBobinas = async (calidad) => {
-    if (!calidad) {
+  const loadBobinas = async (calidad, ancho) => {
+    if (!calidad || !ancho) {
       setBobinas([]);
       return;
     }
@@ -311,7 +318,8 @@ const Form = () => {
     try {
       setLoadingBobinas(true);
       const result = await window.api?.bobinas?.getAllForSelects({
-        calidad_id: calidad,
+        calidadId: calidad,
+        ancho: ancho,
       });
       const rows = normalizeRows(result);
       setBobinas(rows);
@@ -421,11 +429,15 @@ const Form = () => {
   };
 
   const handleConfirm = async (data) => {
+    const turnoSeleccionado = turnos.find(
+      (t) => t.id === Number(data.turno_id),
+    );
     const payload = {
       plan_corte_id: Number(data.plan_corte_id),
       bobina_id: Number(data.bobina_id),
       operario_id: Number(data.operario_id),
       turno_id: Number(data.turno_id),
+      turnoPrefijo: turnoSeleccionado?.prefijo || '',
       calidad_id: calidadId ? Number(calidadId) : null,
       espesor_inicial_mm: Number(data.espesor_inicial_mm),
       ancho_inicial_mm: Number(data.ancho_inicial_mm),
@@ -444,7 +456,10 @@ const Form = () => {
         return;
       }
 
-      const result = await saveMethod(payload);
+      const result = await saveMethod({
+        ...payload,
+        numero: bobinasCortadas.length + 1,
+      });
       if (result?.success === false) {
         throw new Error(result?.error || 'No se pudo guardar el registro');
       }
@@ -469,6 +484,8 @@ const Form = () => {
       toast.error(error?.message || 'No se pudo guardar el registro');
     }
   };
+
+  console.log('turnos:', turnos);
 
   return (
     <FormProvider {...methods}>
@@ -787,8 +804,16 @@ const Form = () => {
                   {
                     key: 'plan_corte',
                     label: 'Plan de Corte',
+                    align: 'center',
                     keys: ['plan_corte'],
                     render: (row) => `${readValue(row, ['plan_corte'], '-')}`,
+                  },
+                  {
+                    key: 'numero',
+                    label: 'Número',
+                    align: 'center',
+                    keys: ['numero'],
+                    render: (row) => `${readValue(row, ['numero'], '-')}`,
                   },
                   {
                     key: 'bobina',
@@ -799,6 +824,7 @@ const Form = () => {
                   {
                     key: 'espesor_inicial',
                     label: 'Espesor inicial (mm)',
+                    align: 'center',
                     keys: ['espesor_inicial'],
                     render: (row) =>
                       `${readValue(row, ['espesor_inicial'], '-')}`,
@@ -806,6 +832,7 @@ const Form = () => {
                   {
                     key: 'espesor_final',
                     label: 'Espesor final (mm)',
+                    align: 'center',
                     keys: ['espesor_final'],
                     render: (row) =>
                       `${readValue(row, ['espesor_final'], '-')}`,
@@ -813,6 +840,7 @@ const Form = () => {
                   {
                     key: 'ancho_inicial',
                     label: 'Ancho inicial (mm)',
+                    align: 'center',
                     keys: ['ancho_inicial'],
                     render: (row) =>
                       `${readValue(row, ['ancho_inicial'], '-')}`,
@@ -820,6 +848,7 @@ const Form = () => {
                   {
                     key: 'ancho_final',
                     label: 'Ancho final (mm)',
+                    align: 'center',
                     keys: ['ancho_final'],
                     render: (row) => `${readValue(row, ['ancho_final'], '-')}`,
                   },
@@ -827,6 +856,7 @@ const Form = () => {
                   {
                     key: 'peso',
                     label: 'Peso (kg)',
+                    align: 'center',
                     keys: ['peso_real'],
                     render: (row) => `${readValue(row, ['peso_real'], '-')} kg`,
                   },

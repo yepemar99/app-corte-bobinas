@@ -1,4 +1,5 @@
 import database from '../../db/database';
+import { formatDateForInput } from '../utils/functions';
 
 const toNumber = (value, fallback = 0) => {
   const numberValue = Number(value);
@@ -6,6 +7,41 @@ const toNumber = (value, fallback = 0) => {
 };
 
 const normalizeText = (value) => (value == null ? '' : String(value));
+
+const guadarProdFlejes = async ({
+  conn,
+  flejes,
+  bobina_cortada_id,
+  numero_bobina,
+  turno_prefijo = '',
+}) => {
+  if (!flejes || !Array.isArray(flejes)) {
+    throw new Error('Flejes debe ser un array válido');
+  }
+  if (numero_bobina <= 0) {
+    throw new Error('Número de bobina no válido para guardar flejes');
+  }
+  let numero_fleje = 1;
+  const cantidadFlejes = flejes.reduce((total, fleje) => {
+    const numFlejes = toNumber(fleje?.num_flejes, 0);
+    return total + numFlejes;
+  }, 0);
+  for (const fleje of flejes) {
+    const cantidad_iteraciones = toNumber(fleje?.num_flejes, 0);
+    for (let i = 0; i < cantidad_iteraciones; i++) {
+      const fechaLote = formatDateForInput();
+      const lote = `CL${fechaLote}${turno_prefijo}${numero_bobina}-${numero_fleje === cantidadFlejes ? 'U' : numero_fleje}`;
+      await conn.query(
+        `
+          INSERT INTO Prod_Flejes (lote, fleje_plan_corte_id, bobina_cortada_id)
+          VALUES (?, ?, ?)
+        `,
+        [lote, fleje.id, bobina_cortada_id],
+      );
+      numero_fleje = numero_fleje + 1;
+    }
+  }
+};
 
 export const listarBobinasCortadasService = async (planCorteId) => {
   try {
@@ -18,6 +54,7 @@ export const listarBobinasCortadasService = async (planCorteId) => {
     const query = `
       SELECT 
         bobinas_cortadas.id, 
+        bobinas_cortadas.numero,
         bobinas_cortadas.bobina_id, 
         bobina.concepto AS bobina_concepto,
         bobinas_cortadas.plan_corte_id, 
@@ -50,6 +87,7 @@ export const listarBobinasCortadasService = async (planCorteId) => {
       data: rows.map((row) => ({
         ...row,
         id: Number(row?.id),
+        numero: Number(row?.numero),
         bobina_id: Number(row?.bobina_id),
         plan_corte_id: Number(row?.plan_corte_id),
         turno_id: Number(row?.turno_id),
@@ -78,6 +116,7 @@ export const guardarBobinaCortadaService = async (payload) => {
   const bobinaId = toNumber(payload?.bobina_id);
   const operarioId = toNumber(payload?.operario_id);
   const turnoId = toNumber(payload?.turno_id);
+  const turnoPrefijo = normalizeText(payload?.turnoPrefijo);
   const pesoKg = toNumber(payload?.peso_kg);
   const espesorInicialMm = toNumber(payload?.espesor_inicial_mm);
   const anchoInicialMm = toNumber(payload?.ancho_inicial_mm);
@@ -87,6 +126,7 @@ export const guardarBobinaCortadaService = async (payload) => {
     payload?.observaciones ?? payload?.observacion,
   );
   const flejes = Array.isArray(payload?.flejes) ? payload.flejes : [];
+  const numero = toNumber(payload?.numero);
 
   if (planCorteId <= 0) {
     throw new Error('plan_corte_id es requerido');
@@ -138,9 +178,11 @@ export const guardarBobinaCortadaService = async (payload) => {
         turno_id,
         operario_id,
         plan_corte_id,
-        bobina_id
+        bobina_id,
+        numero
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      OUTPUT INSERTED.id 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const insertResult = await conn.query(insertQuery, [
@@ -154,7 +196,17 @@ export const guardarBobinaCortadaService = async (payload) => {
       operarioId,
       planCorteId,
       bobinaId,
+      numero,
     ]);
+
+    const bobinaCortadaId = Number(insertResult[0]?.id);
+    await guadarProdFlejes({
+      conn,
+      flejes: flejes,
+      numero_bobina: numero,
+      bobina_cortada_id: bobinaCortadaId,
+      turno_prefijo: turnoPrefijo,
+    });
 
     const bobinaRows = await conn.query(
       'SELECT unidades FROM Bobinas WHERE id = ?',

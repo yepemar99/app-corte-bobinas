@@ -4,7 +4,7 @@ export const listarTodosTurnosService = async () => {
   try {
     const conn = database.getConnection();
     const query = `
-      SELECT id, entrada, salida
+      SELECT id, entrada, salida, prefijo
       FROM Turnos
       ORDER BY id ASC 
     `;
@@ -16,6 +16,7 @@ export const listarTodosTurnosService = async () => {
         id: Number(row.id),
         entrada: row.entrada,
         salida: row.salida,
+        prefijo: row.prefijo,
         horario: `${row.entrada} - ${row.salida}`,
       })),
       total: rows.length,
