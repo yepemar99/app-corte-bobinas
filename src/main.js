@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { default: database } = require('./db/database');
 const { default: dbRoutes } = require('./server/routes/db.route');
@@ -7,6 +7,7 @@ const { default: operariosRoutes } = require('./server/routes/operarios.route');
 const { default: planesRoutes } = require('./server/routes/planes.route');
 const { default: flejesRoutes } = require('./server/routes/flejes.route');
 const { default: bobinaRoutes } = require('./server/routes/bobina.route');
+const { default: printRoutes } = require('./server/routes/print.route');
 const {
   default: bobinasCortadasRoutes,
 } = require('./server/routes/bobinasCortadas.route');
@@ -51,6 +52,7 @@ app.on('ready', async () => {
   }
 
   // Iniciar rutas del servidor
+  printRoutes();
   turnosRoutes();
   operariosRoutes();
   planesRoutes();

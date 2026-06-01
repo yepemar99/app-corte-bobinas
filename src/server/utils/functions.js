@@ -25,6 +25,21 @@ export const formatDateForInput = (fecha) => {
   return `${dd}${mm}${yy}`;
 };
 
+export const formatDateToDisplay = (fecha) => {
+  let date = fecha ? new Date(fecha) : new Date();
+
+  if (isNaN(date.getTime())) {
+    date = new Date();
+  }
+
+  const pad = (n) => n.toString().padStart(2, '0');
+  const dd = pad(date.getDate());
+  const mm = pad(date.getMonth() + 1);
+  const yyyy = date.getFullYear();
+
+  return `${dd}/${mm}/${yyyy}`;
+};
+
 export function fixEncoding(str) {
   return Buffer.from(str, 'latin1').toString('utf8');
 }

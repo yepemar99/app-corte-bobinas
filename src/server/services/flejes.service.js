@@ -16,7 +16,7 @@ export const listarFlejesPorPlanService = async (payload) => {
     }
 
     const query = `
-      SELECT fpc.*, f.concepto, f.calidad_id
+      SELECT fpc.*, f.concepto, f.calidad_id, tc.nombre AS calidad, f.espesor, f.ancho
       FROM Flejes_Plan_Corte fpc
       LEFT JOIN Flejes f ON f.id = fpc.fleje_id
       LEFT JOIN Tipos_Calidad tc ON f.calidad_id = tc.id
@@ -33,6 +33,8 @@ export const listarFlejesPorPlanService = async (payload) => {
         factor_proporcional_peso: Number(row?.factor_proporcional_peso),
         fleje_id: Number(row?.fleje_id),
         plan_corte_id: Number(row?.plan_corte_id),
+        calidad_id: Number(row?.calidad_id),
+        calidad: row?.calidad || null,
       })),
       total: rows.length,
     };

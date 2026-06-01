@@ -14,9 +14,10 @@ export const listarBobinasParaSelectService = async ({ calidadId, ancho }) => {
 
     const conn = database.getConnection();
     const query = `
-      SELECT b.id, b.concepto
+      SELECT b.id, b.concepto, f.nombre AS fabricante
       FROM Bobinas AS b
       LEFT JOIN Tipos_Calidad AS tc ON b.calidad_id = tc.id
+      LEFT JOIN Fabricantes AS f ON b.fabricante_id = f.id
       WHERE b.calidad_id = ? AND b.ancho = ?
       ORDER BY tc.nombre, b.concepto ASC
     `;

@@ -18,7 +18,12 @@ const bobinasCortadasController = {
   save: async (_, payload) => {
     try {
       const result = await guardarBobinaCortadaService(payload);
-      return { success: true, data: result.data, message: result.message };
+      return {
+        success: true,
+        data: result.data,
+        etiquetas: result.etiquetas,
+        message: result.message,
+      };
     } catch (error) {
       console.error('Error en bobinasCortadasController.save:', error);
       return { success: false, error: error.message };

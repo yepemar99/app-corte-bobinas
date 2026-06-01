@@ -24,6 +24,9 @@ contextBridge.exposeInMainWorld('api', {
     save: (payload) => ipcRenderer.invoke('bobinasCortadas:save', payload),
     getAll: (payload) => ipcRenderer.invoke('bobinasCortadas:getAll', payload),
   },
+  zebra: {
+    printEtiquetas: (payload) => ipcRenderer.invoke('zebra:printEtiquetas', payload),
+  },
   flejes: {
     getByPlanCorteId: (payload) =>
       ipcRenderer.invoke('flejes:getByPlanCorteId', payload),

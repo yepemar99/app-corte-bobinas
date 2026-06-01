@@ -432,9 +432,12 @@ const Form = () => {
     const turnoSeleccionado = turnos.find(
       (t) => t.id === Number(data.turno_id),
     );
+    const findBobina = bobinas.find((b) => b.id === Number(data.bobina_id));
+    const fabricante = findBobina?.fabricante || '';
     const payload = {
       plan_corte_id: Number(data.plan_corte_id),
       bobina_id: Number(data.bobina_id),
+      fabricante: fabricante,
       operario_id: Number(data.operario_id),
       turno_id: Number(data.turno_id),
       turnoPrefijo: turnoSeleccionado?.prefijo || '',
@@ -464,6 +467,21 @@ const Form = () => {
         throw new Error(result?.error || 'No se pudo guardar el registro');
       }
 
+      const etiquetas = Array.isArray(result?.etiquetas)
+        ? result.etiquetas
+        : [];
+      const printMethod = getWindowApiMethod([['zebra', 'printEtiquetas']]);
+
+      if (printMethod && etiquetas.length > 0) {
+        const printResult = await printMethod({ etiquetas });
+        if (printResult?.success === false) {
+          toast.error(
+            printResult?.error ||
+              'Se guardó el corte, pero no se pudo imprimir la Zebra',
+          );
+        }
+      }
+
       reset({
         plan_corte_id: data.plan_corte_id,
         bobina_id: 0,
@@ -484,8 +502,6 @@ const Form = () => {
       toast.error(error?.message || 'No se pudo guardar el registro');
     }
   };
-
-  console.log('turnos:', turnos);
 
   return (
     <FormProvider {...methods}>

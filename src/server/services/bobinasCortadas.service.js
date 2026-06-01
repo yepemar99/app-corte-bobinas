@@ -1,5 +1,5 @@
 import database from '../../db/database';
-import { formatDateForInput } from '../utils/functions';
+import { formatDateForInput, formatDateToDisplay } from '../utils/functions';
 
 const toNumber = (value, fallback = 0) => {
   const numberValue = Number(value);
@@ -41,6 +41,42 @@ const guadarProdFlejes = async ({
       numero_fleje = numero_fleje + 1;
     }
   }
+};
+
+const getEtiquetasFleje = ({
+  flejes,
+  turno_prefijo,
+  numero_bobina,
+  fabricante = '',
+}) => {
+  let numero_fleje = 1;
+  const etiquetas = [];
+  const cantidadFlejes = flejes.reduce((total, fleje) => {
+    const numFlejes = toNumber(fleje?.num_flejes, 0);
+    return total + numFlejes;
+  }, 0);
+  for (const fleje of flejes) {
+    const cantidad_iteraciones = toNumber(fleje?.num_flejes, 0);
+    for (let i = 0; i < cantidad_iteraciones; i++) {
+      const fechaActual = new Date();
+      const fechaLote = formatDateForInput(fechaActual);
+      const fechaEtiqueta = formatDateToDisplay(fechaActual);
+      const lote = `CL${fechaLote}${turno_prefijo}${numero_bobina}-${numero_fleje === cantidadFlejes ? 'U' : numero_fleje}`;
+      etiquetas.push({
+        lote,
+        calidad: fleje.calidad || '',
+        fabricante: fabricante,
+        ancho: fleje.ancho || '',
+        espesor: fleje.espesor || '', // Ver como se calcula
+        peso: fleje.peso_unit_definido || '', // Ver como se calcula
+        num_fleje: numero_fleje,
+        fecha: fechaEtiqueta,
+      });
+      numero_fleje = numero_fleje + 1;
+    }
+  }
+
+  return etiquetas;
 };
 
 export const listarBobinasCortadasService = async (planCorteId) => {
@@ -125,6 +161,7 @@ export const guardarBobinaCortadaService = async (payload) => {
   const observaciones = normalizeText(
     payload?.observaciones ?? payload?.observacion,
   );
+  const fabricante = normalizeText(payload?.fabricante);
   const flejes = Array.isArray(payload?.flejes) ? payload.flejes : [];
   const numero = toNumber(payload?.numero);
 
@@ -200,6 +237,13 @@ export const guardarBobinaCortadaService = async (payload) => {
     ]);
 
     const bobinaCortadaId = Number(insertResult[0]?.id);
+    const etiquetas = await getEtiquetasFleje({
+      flejes,
+      turno_prefijo: turnoPrefijo,
+      numero_bobina: numero,
+      fabricante,
+    });
+
     await guadarProdFlejes({
       conn,
       flejes: flejes,
@@ -274,6 +318,7 @@ export const guardarBobinaCortadaService = async (payload) => {
 
     return {
       data: insertResult,
+      etiquetas,
       message: 'Bobina cortada guardada correctamente',
     };
   } catch (error) {
