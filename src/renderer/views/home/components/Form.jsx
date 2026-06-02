@@ -33,6 +33,7 @@ import Select from '../../../components/common/Select';
 import TextField from '../../../components/common/Textfield';
 import { DataContext } from '../../../contexts/DataContext';
 import Modal from '../../../components/common/Modal';
+import LoadingModal from './LoadingModal';
 
 const planCorteSchema = z.object({
   plan_corte_id: z.coerce.number().min(1, 'Requerido'),
@@ -197,6 +198,7 @@ const Form = () => {
   const [loadingFlejes, setLoadingFlejes] = useState(false);
   const [loadingBobinas, setLoadingBobinas] = useState(false);
   const [loadingBobinasCortadas, setLoadingBobinasCortadas] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Error validacion
   const [error, setError] = useState(null);
@@ -237,8 +239,6 @@ const Form = () => {
       setLoadingPlanes(false);
     }
   };
-
-  console.log('flejes:', flejesPlan);
 
   const loadPlanData = async (planId) => {
     if (!planId) {
@@ -429,6 +429,9 @@ const Form = () => {
   };
 
   const handleConfirm = async (data) => {
+    setPendingData(null);
+    setError(null);
+    setLoading(true);
     const turnoSeleccionado = turnos.find(
       (t) => t.id === Number(data.turno_id),
     );
@@ -496,7 +499,7 @@ const Form = () => {
       });
       setError(null);
       toast.success('Registro guardado correctamente');
-      setPendingData(null);
+      setLoading(false);
       loadPlanData(data.plan_corte_id);
     } catch (error) {
       toast.error(error?.message || 'No se pudo guardar el registro');
@@ -505,6 +508,7 @@ const Form = () => {
 
   return (
     <FormProvider {...methods}>
+      <LoadingModal open={loading} />
       <Modal open={!!error} onClose={() => setError(null)}>
         <Typography variant="h5" sx={{ mb: 1 }}>
           Le recomendamos revisar los datos de la bobina
