@@ -25,10 +25,14 @@ contextBridge.exposeInMainWorld('api', {
     getAll: (payload) => ipcRenderer.invoke('bobinasCortadas:getAll', payload),
   },
   zebra: {
-    printEtiquetas: (payload) => ipcRenderer.invoke('zebra:printEtiquetas', payload),
+    printEtiquetas: (payload) =>
+      ipcRenderer.invoke('zebra:printEtiquetas', payload),
   },
   flejes: {
     getByPlanCorteId: (payload) =>
       ipcRenderer.invoke('flejes:getByPlanCorteId', payload),
+  },
+  actions: {
+    cerrarPrograma: () => ipcRenderer.invoke('cerrar-app'),
   },
 });
