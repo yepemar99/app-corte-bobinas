@@ -16,7 +16,7 @@ export const listarFlejesPorPlanService = async (payload) => {
     }
 
     const query = `
-      SELECT fpc.*, f.concepto, f.calidad_id, tc.nombre AS calidad, f.espesor, f.ancho
+      SELECT fpc.*, f.concepto, f.calidad_id, tc.nombre AS calidad, f.espesor, f.ancho, f.fleje_id
       FROM Flejes_Plan_Corte fpc
       LEFT JOIN Flejes f ON f.id = fpc.fleje_id
       LEFT JOIN Tipos_Calidad tc ON f.calidad_id = tc.id
@@ -34,6 +34,7 @@ export const listarFlejesPorPlanService = async (payload) => {
         fleje_id: Number(row?.fleje_id),
         plan_corte_id: Number(row?.plan_corte_id),
         calidad_id: Number(row?.calidad_id),
+        fleje_id: Number(row?.fleje_id),
         calidad: row?.calidad || null,
       })),
       total: rows.length,
