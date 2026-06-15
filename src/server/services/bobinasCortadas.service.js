@@ -33,8 +33,8 @@ const guadarProdFlejes = async ({
       const lote = `CL${fechaLote}${turno_prefijo}${numero_bobina}-${numero_fleje === cantidadFlejes ? 'U' : numero_fleje}`;
       await conn.query(
         `
-          INSERT INTO Lotes_Flejes (lote, fleje_plan_corte_id, bobina_cortada_id)
-          VALUES (?, ?, ?)
+          INSERT INTO Lotes_Flejes (lote, fleje_plan_corte_id, bobina_cortada_id, activo)
+          VALUES (?, ?, ?, 1)
         `,
         [lote, fleje.id, bobina_cortada_id],
       );
