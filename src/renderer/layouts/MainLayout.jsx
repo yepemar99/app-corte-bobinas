@@ -11,7 +11,7 @@ const MainLayout = ({ children }) => {
 
   return (
     <Box minHeight="100vh">
-      <TopBar />
+      <TopBar title="Control de Corte de Bobinas" />
       <Box>
         <Outlet />
       </Box>

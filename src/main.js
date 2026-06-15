@@ -21,8 +21,7 @@ if (require('electron-squirrel-startup')) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    fullscreen: true,
     webPreferences: {
       nodeIntegration: true,
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
@@ -59,6 +58,22 @@ app.on('ready', async () => {
   flejesRoutes();
   bobinaRoutes();
   bobinasCortadasRoutes();
+
+  ipcMain.handle('cerrar-app', async () => {
+    try {
+      const connection = database.getConnection();
+
+      if (connection?.close) {
+        await connection.close();
+      } else if (connection?.disconnect) {
+        await connection.disconnect();
+      }
+    } catch (err) {
+      console.error('❌ Error al cerrar la BD:', err);
+    }
+
+    app.exit(0);
+  });
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

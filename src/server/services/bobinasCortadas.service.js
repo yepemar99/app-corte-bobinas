@@ -11,7 +11,7 @@ const normalizeText = (value) => (value == null ? '' : String(value));
 const guadarProdFlejes = async ({
   conn,
   flejes,
-  bobina_cortada_id,
+  colada_id,
   numero_bobina,
   turno_prefijo = '',
 }) => {
@@ -33,10 +33,10 @@ const guadarProdFlejes = async ({
       const lote = `CL${fechaLote}${turno_prefijo}${numero_bobina}-${numero_fleje === cantidadFlejes ? 'U' : numero_fleje}`;
       await conn.query(
         `
-          INSERT INTO Lotes_Flejes (lote, fleje_plan_corte_id, bobina_cortada_id, activo)
-          VALUES (?, ?, ?, 1)
+          INSERT INTO Lotes_Flejes (lote, fleje_id, colada_id)
+          VALUES (?, ?, ?)
         `,
-        [lote, fleje.id, bobina_cortada_id],
+        [lote, fleje.fleje_id, colada_id],
       );
       numero_fleje = numero_fleje + 1;
     }
@@ -236,7 +236,7 @@ export const guardarBobinaCortadaService = async (payload) => {
       numero,
     ]);
 
-    const bobinaCortadaId = Number(insertResult[0]?.id);
+    const coladaId = Number(insertResult[0]?.colada_id);
     const etiquetas = await getEtiquetasFleje({
       flejes,
       turno_prefijo: turnoPrefijo,
@@ -248,7 +248,7 @@ export const guardarBobinaCortadaService = async (payload) => {
       conn,
       flejes: flejes,
       numero_bobina: numero,
-      bobina_cortada_id: bobinaCortadaId,
+      colada_id: coladaId,
       turno_prefijo: turnoPrefijo,
     });
 
